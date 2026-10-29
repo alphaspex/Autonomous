@@ -1,0 +1,38 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  font-family: sans-serif;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.controls-container {
+  padding: 1rem;
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.whiteboard-container {
+  flex-grow: 1;
+  position: relative;
+  background-color: white;
+  cursor: crosshair;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
