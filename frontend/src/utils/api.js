@@ -1,18 +1,31 @@
-/**
- * Pure Network I/O Module
- */
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export async function fetchSampleSketch() {
+  // (Keep existing function)
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/sketch/sample`);
+    return await response.json();
+  } catch (error) { return null; }
+}
+
+// NEW: Send raw text to Python parser
+export async function generateSketch(rawText) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/sketch/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ raw_text: rawText })
+    });
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error("Parse error:", await response.text());
+      return null;
     }
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error("Failed to fetch sketch:", error);
+    console.error("Failed to generate sketch:", error);
     return null;
   }
 }
