@@ -1,26 +1,31 @@
 /**
- * Isolated Canvas Drawing Driver
+ * Renders absolute (X, Y) coordinate points onto the HTML5 Canvas
  */
-export function drawSegments(ctx, segments) {
-  if (!segments || segments.length === 0) return;
+export function renderSketch(canvas, sketchData) {
+  if (!canvas || !sketchData || !sketchData.sessions) return;
   
-  ctx.beginPath();
-  
-  // Move to start of first segment
-  ctx.moveTo(segments[0].x1, segments[0].y1);
-  
-  for (const seg of segments) {
-    ctx.lineTo(seg.x2, seg.y2);
-  }
-  
-  // Assume uniform thickness for the session
-  ctx.lineWidth = segments[0].thickness;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#333';
-  ctx.stroke();
-}
+  const ctx = canvas.getContext('2d');
+  const CM_TO_PX = 40; // 1 cm = 40 pixels on screen
 
-export function clearCanvas(ctx, canvasWidth, canvasHeight) {
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  sketchData.sessions.forEach(session => {
+    if (!session.points || session.points.length === 0) return;
+
+    ctx.beginPath();
+    ctx.lineWidth = session.thickness_mm * 2; // Convert mm thickness to px
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#222222';
+
+    // Move to the first point
+    const startPt = session.points[0];
+    ctx.moveTo(startPt.x * CM_TO_PX, startPt.y * CM_TO_PX);
+
+    // Connect sequential points in order
+    for (let i = 1; i < session.points.length; i++) {
+      const pt = session.points[i];
+      ctx.lineTo(pt.x * CM_TO_PX, pt.y * CM_TO_PX);
+    }
+
+    ctx.stroke();
+  });
 }

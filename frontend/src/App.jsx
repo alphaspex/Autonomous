@@ -1,33 +1,43 @@
 import React, { useState } from 'react';
 import Controls from './components/Controls';
 import Whiteboard from './components/Whiteboard';
-import { generateSketch } from './utils/api';
+import { generateSketch, fetchSampleSketch } from './utils/api';
 
 function App() {
   const [rawInput, setRawInput] = useState('');
   const [sketchData, setSketchData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [shouldClear, setShouldClear] = useState(false);
 
   const handleConfirm = async () => {
     if (!rawInput.trim()) return;
     
     setIsLoading(true);
+    setErrorMessage('');
     setShouldClear(false);
     
-    // Send text to Python!
     const data = await generateSketch(rawInput);
     
-    if (data) {
+    if (data && data.sessions && data.sessions.length > 0) {
       setSketchData(data);
     } else {
-      try {
-        alert("Python could not parse the text. Make sure the syntax is exactly: [ draw (x, y, thickness) // tick1, tick2... ]");
-      } catch {
-        console.error("Python could not parse the text. Make sure the syntax is exactly: [ draw (x, y, thickness) // tick1, tick2... ]");
-      }
+      setErrorMessage("Could not parse drawing text. Expected format: [ draw (thickness) // (x1, y1), (x2, y2), ... ]");
     }
     
+    setIsLoading(false);
+  };
+
+  const handleLoadSample = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    const sample = await fetchSampleSketch();
+    if (sample) {
+      setSketchData(sample);
+      setRawInput('[ draw (1.5) // (2.0, 2.0), (6.0, 2.0), (6.0, 6.0), (2.0, 6.0), (2.0, 2.0) ]');
+    } else {
+      setErrorMessage("Failed to load sample from server.");
+    }
     setIsLoading(false);
   };
 
@@ -35,6 +45,7 @@ function App() {
     setShouldClear(true);
     setSketchData(null);
     setRawInput(''); 
+    setErrorMessage('');
   };
 
   return (
@@ -43,8 +54,10 @@ function App() {
         rawInput={rawInput}
         setRawInput={setRawInput}
         onConfirm={handleConfirm} 
+        onLoadSample={handleLoadSample}
         onClear={handleClear}
         isLoading={isLoading}
+        errorMessage={errorMessage}
       />
       <Whiteboard 
         sketchData={sketchData} 

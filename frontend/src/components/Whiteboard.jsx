@@ -1,38 +1,35 @@
-import React, { useRef, useEffect } from 'react';
-import { drawSegments, clearCanvas } from '../utils/canvasRenderer';
-import { decodeSessionToSegments } from '../utils/clockDecoder';
+import React, { useRef, useEffect, useCallback } from 'react';
+import { renderSketch } from '../utils/canvasRenderer';
 
 export default function Whiteboard({ sketchData, shouldClear, onClearComplete }) {
   const canvasRef = useRef(null);
 
-  useEffect(() => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !canvas.parentElement) return;
     const ctx = canvas.getContext('2d');
-
-    // Handle Resize for crisp rendering
     const rect = canvas.parentElement.getBoundingClientRect();
-    canvas.width = rect.width * window.devicePixelRatio;
-    canvas.height = rect.height * window.devicePixelRatio;
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
+
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (shouldClear) {
-      clearCanvas(ctx, canvas.width, canvas.height);
-      onClearComplete();
+      if (onClearComplete) onClearComplete();
       return;
     }
 
     if (sketchData && sketchData.sessions) {
-      clearCanvas(ctx, canvas.width, canvas.height); // clear before draw
-      
-      sketchData.sessions.forEach(session => {
-        const segments = decodeSessionToSegments(session, 40); // 40px per cm
-        drawSegments(ctx, segments);
-      });
+      renderSketch(canvas, sketchData);
     }
   }, [sketchData, shouldClear, onClearComplete]);
+
+  useEffect(() => {
+    draw();
+    window.addEventListener('resize', draw);
+    return () => window.removeEventListener('resize', draw);
+  }, [draw]);
 
   return (
     <div className="whiteboard-container">
